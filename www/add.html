@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/add.css">
+    <title>Home</title>
+	<style type="text/css">
+   input {font-weight:bold;}
+</style>
+</head>
+
+<body>
+    <header>
+        <h1><span class="header_color">i-Explore</span></h1>
+    </header>
+    <div class="container">
+        <div class="content" id="content">
+            <h4 class="title">Add property</h4>
+            <form action="">
+                <input type="text" id="activity_name" placeholder="Activity name">
+                <input type="text" id="location" placeholder="Location">
+				<input type="date" id="date" placeholder="Date">
+                <input type="time" name="Time" id="time">
+				<input type="text" id="reporter" placeholder="Reporter name">
+            </form>
+            <button class="save_btn" id="btn_save">SAVE</button>
+        </div>
+
+        <div class="showDetails" id="showDetails">
+            <h4 class="title">Add activities</h4>
+            <div class="details">
+                <p><span class="label">Activity name: </span><span id="activity_name_confirm">Hang out</span></p>
+                <p><span class="label">Location: </span><span id="location_confirm"></span></p>
+                <p><span class="label">Date: </span><span id="date_confirm"></span></p>
+				<p><span class="label">Time: </span><span id="time_confirm"></span></p>
+                <p><span class="label">Reporter: </span><span id="reporter_confirm"></span></p>
+            </div>
+            <div class="group_btn">
+                <button class="edit_btn" id="btn_edit_confirm">EDIT</button>
+                <button class="home_btn" id="btn_add_activity_confirm">ADD</button>
+            </div>
+        </div>
+
+    </div>
+    <script src=" cordova.js "></script>
+    <script src="js/index.js "></script>
+    <script>
+        document.getElementById("btn_save").addEventListener("click",function() {
+			var activity_name = document.getElementById("activity_name").value;
+			var location = document.getElementById("location").value;
+			var date = document.getElementById("date").value;
+			var time = document.getElementById("time").value;
+            var reporter = document.getElementById("reporter").value;
+			
+            if(activity_name === '' || date === '' || reporter === '') {
+                warningEmptyFill();
+                return;
+            }
+			
+			var rs = "0";
+			
+			var db = window.sqlitePlugin.openDatabase({name: 'activities.db', location: 'default'});
+			db.transaction(function(tr) {
+				tr.executeSql('SELECT * FROM ActivityTable WHERE activity LIKE \'' + activity_name + '\'', [], function(tx, results) {
+					var i;
+					for(i = 0; i < results.rows.length ; i++) {
+						if (activity_name == results.rows.item(i).activity && location == results.rows.item(i).location && date == results.rows.item(i).date && time == results.rows.item(i).time && reporter == results.rows.item(i).reporter) {
+							rs = "1";
+							warningDuplicate();
+							return;
+						}
+					}
+				});
+				}, function(error) {
+					console.log('Transaction ERROR: ' + error.message);
+					document.getElementById("content").style.display = "none";
+						document.getElementById("showDetails").style.display = "block";
+								
+						document.getElementById("activity_name_confirm").innerHTML = document.getElementById("activity_name").value;
+						document.getElementById("location_confirm").innerHTML = document.getElementById("location").value;
+						document.getElementById("date_confirm").innerHTML = document.getElementById("date").value
+						document.getElementById("time_confirm").innerHTML =  document.getElementById("time").value;
+						document.getElementById("reporter_confirm").innerHTML = document.getElementById("reporter").value;
+					return ;
+				}, function() {
+					console.log('Read database OK');
+					if (rs === "0") {
+						document.getElementById("content").style.display = "none";
+						document.getElementById("showDetails").style.display = "block";
+								
+						document.getElementById("activity_name_confirm").innerHTML = document.getElementById("activity_name").value;
+						document.getElementById("location_confirm").innerHTML = document.getElementById("location").value;
+						document.getElementById("date_confirm").innerHTML = document.getElementById("date").value
+						document.getElementById("time_confirm").innerHTML =  document.getElementById("time").value;
+						document.getElementById("reporter_confirm").innerHTML = document.getElementById("reporter").value;
+					}
+				}
+			);
+			
+        });
+
+        document.getElementById("btn_edit_confirm").addEventListener("click",function() {
+            document.getElementById("content").style.display = "block";
+            document.getElementById("showDetails").style.display = "none";
+        });
+
+        document.getElementById("btn_add_activity_confirm").addEventListener("click",function() {
+            var activity_name = document.getElementById("activity_name_confirm").innerHTML;
+            var location = document.getElementById("location_confirm").innerHTML;
+            var date = document.getElementById("date_confirm").innerHTML;
+            var time = document.getElementById("time_confirm").innerHTML;
+            var reporter = document.getElementById("reporter_confirm").innerHTML;
+
+            addActivityToDatabase(activity_name, location, date, time, reporter);
+        });
+    </script>
+</body>
+
+</html>
